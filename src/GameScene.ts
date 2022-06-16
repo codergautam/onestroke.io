@@ -23,17 +23,20 @@ class GameScene extends Phaser.Scene {
     drawingBoard: DrawingBoard;
     rater: Rater;
     roomInfo: { players: number; maxPlayers: number; startTime: null | number; topic: string; drawingEndTime: null | number; submissionEndTime: null | number; drawing: Drawing | null; votingTime: number | null; };
+    now: any;
 
     constructor() {
       super("game");
+    
     }
     preload() {
       this.state = "matchmaking";
 
+      this.now = 0;
     }
 
     updateWaitingText() {
-      var left = this.roomInfo.startTime - Date.now();
+      var left = this.roomInfo.startTime - this.now;
 
       var top = `(${this.roomInfo.players}/${this.roomInfo.maxPlayers})`;
       var bottom = `${this.roomInfo.startTime ? left >= 0 ? `Starting in ${msToSeconds(left)}` : "Starting in 0" : "Waiting for players.."}`;
@@ -128,6 +131,9 @@ class GameScene extends Phaser.Scene {
         this.drawingBoard.visible = true;
         this.drawingBoard.setText("Winner: "+results[0].name);
       });
+      this.socket.on("now", (now) => {
+        this.now = now;
+      })
       this.text1.visible = true;
       this.text2.visible = true;
 
@@ -163,30 +169,31 @@ class GameScene extends Phaser.Scene {
       if(this.rater) this.rater.updateContainer();
 
       if(this.state == "matchmaking" && this.socket.connected && this.roomInfo.startTime) {
+        
         this.updateWaitingText();
       }
 
       if(this.state == "drawing" && this.socket.connected && this.roomInfo.drawingEndTime) {
-        this.drawingBoard.setText(`Topic: ${this.roomInfo.topic}\n Time left: ${this.roomInfo.drawingEndTime - Date.now() >= 0 ? msToSeconds(this.roomInfo.drawingEndTime - Date.now()) : "0"}`);
+        this.drawingBoard.setText(`Topic: ${this.roomInfo.topic}\n Time left: ${this.roomInfo.drawingEndTime - this.now >= 0 ? msToSeconds(this.roomInfo.drawingEndTime - this.now) : "0"}`);
       }
 
-      if(this.state == "submitting" && this.socket.connected && this.roomInfo.submissionEndTime && this.roomInfo.submissionEndTime - Date.now() <= 3000) {
+      if(this.state == "submitting" && this.socket.connected && this.roomInfo.submissionEndTime && this.roomInfo.submissionEndTime - this.now <= 3000) {
         this.drawingBoard.visible = false;
         this.text1.visible = true;
-        this.text1.setText(`Voting begins in ${this.roomInfo.submissionEndTime - Date.now() >= 0 ? msToSeconds(this.roomInfo.submissionEndTime - Date.now()) : "0"}!`);
+        this.text1.setText(`Voting begins in ${this.roomInfo.submissionEndTime - this.now >= 0 ? msToSeconds(this.roomInfo.submissionEndTime - this.now) : "0"}!`);
       }
 
       if(this.state == "voting" && this.socket.connected && this.roomInfo.votingTime) {
        if(this.socket.id != this.roomInfo.drawing.id) {
         this.drawingBoard.setText(`Drawing by: ${this.roomInfo.drawing.name}\n Vote now!`);
         this.rater.setVisible(true);
-        if(this.roomInfo.votingTime - Date.now() <= 0) {
+        if(this.roomInfo.votingTime - this.now <= 0) {
           this.rater.setVisible(false);
           this.socket.emit("vote", this.rater.getValue());
         }
        } 
        else {
-        this.drawingBoard.setText(`People are rating your drawing!\n Time left: ${this.roomInfo.votingTime - Date.now() >= 0 ? msToSeconds(this.roomInfo.votingTime - Date.now()) : "0"}`);
+        this.drawingBoard.setText(`People are rating your drawing!\n Time left: ${this.roomInfo.votingTime - this.now >= 0 ? msToSeconds(this.roomInfo.votingTime - this.now) : "0"}`);
         this.rater.setVisible(false);
        } 
 

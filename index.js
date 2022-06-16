@@ -54,6 +54,7 @@ io.on("connection", async (socket) => {
 //tick rooms
 setInterval(() => {
   roomlist.tickAll();
+  io.emit("now", Date.now());
 }, 1000/10);
 
 server.listen(process.env.PORT || 3000, () => {
