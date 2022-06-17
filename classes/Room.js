@@ -25,8 +25,8 @@ class Room {
 
 
 
-   if(this.players.size > 1 && !(this.startTime && this.startTime < Date.now() + 20000)) {
-      this.startTime = Date.now() + 20000;
+   if(this.players.size > 2 && !(this.startTime && this.startTime < Date.now() + 60000)) {
+      this.startTime = Date.now() + 60000;
   }
   if(this.players.size > 4 && !(this.startTime && this.startTime < Date.now() + 30000)) {
       this.startTime = Date.now() + 30000;
@@ -68,7 +68,7 @@ class Room {
     } else if(this.state == "starting" && this.startDrawingTime && this.startDrawingTime < Date.now()) {
       console.log("starting drawing", this.id);
       this.state = "drawing";
-      this.drawingTime = Date.now() + 15000;
+      this.drawingTime = Date.now() + 120000;
       io.getio().in(this.id).emit("startDrawing", this.drawingTime);
     } else if(this.state == "drawing" && this.drawingTime && this.drawingTime < Date.now()) {
       console.log("ending drawing", this.id);
@@ -87,12 +87,12 @@ class Room {
         drawing.voted = true;
         this.votingFor = drawing.id;
         //200 ms to wait for responses
-        this.votingTime = Date.now() + 10200;
+        this.votingTime = Date.now() + 5200;
         io.getio().in(this.id).emit("voting", drawing, this.votingTime-200);
       } else {
         console.log("no drawings to vote for", this.id);
         var e = Object.values(this.drawings);
-        e.map(drawing=>{
+        e = e.map(drawing=>{
           var f = {
             id: drawing.id,
             name: this.players.get(drawing.id).name,
@@ -101,6 +101,7 @@ class Room {
           };
           return f;
         }).sort((a,b)=>b.avgVotes-a.avgVotes);
+        console.table( e);
         io.getio().in(this.id).emit("endGame", e);
         this.state = "ended";
         // TODO: show winner

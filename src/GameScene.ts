@@ -32,7 +32,7 @@ class GameScene extends Phaser.Scene {
     preload() {
       this.state = "matchmaking";
 
-      this.now = 0;
+      this.now = Date.now();
     }
 
     updateWaitingText() {
@@ -129,7 +129,9 @@ class GameScene extends Phaser.Scene {
       this.socket.on("endGame", (results) => {
         this.state = "ended";
         this.drawingBoard.visible = true;
-        this.drawingBoard.setText("Winner: "+results[0].name);
+        this.drawingBoard.setText("#1 - "+results[0].name+" ("+results[0].avgVotes+")\n#2 - "+results[1].name+" ("+results[1].avgVotes+")"+(results.length >2?"\n#3 - "+results[2].name+" ("+results[2].avgVotes+")": ""));
+        this.drawingBoard.loadDrawing(results[0]);
+        this.rater.visible = false;
       });
       this.socket.on("now", (now) => {
         this.now = now;
