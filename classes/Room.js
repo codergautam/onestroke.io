@@ -26,7 +26,7 @@ class Room {
 
 
    if(this.players.size > 2 && !(this.startTime && this.startTime < Date.now() + 60000)) {
-      this.startTime = Date.now() + 60000;
+      this.startTime = Date.now() + 20000;
   }
   if(this.players.size > 4 && !(this.startTime && this.startTime < Date.now() + 30000)) {
       this.startTime = Date.now() + 30000;
